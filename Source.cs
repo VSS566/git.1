@@ -1,5 +1,3 @@
-using System.Windows;
-
 //PROCESS
 Console.WriteLine("ИГРА ПЯТНАШКИ\n");
 Console.WriteLine("ENTER FIELD SIZE\n");
