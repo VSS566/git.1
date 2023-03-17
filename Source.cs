@@ -7,14 +7,12 @@ Point size = new(
 );
 
 int[,] field_normal = normal_field(size.y, size.x);
-
 Tuple<int[,], Point> pack = create_correct_field(ref size);
-
 int[,] field = pack.Item1;
 Point player = pack.Item2;
 bool checking = false;
 int step_count = 0;
-
+Console.Clear();
 while(!checking)
 {
     Console.WriteLine($"STEP: {step_count}");
@@ -32,11 +30,8 @@ while(!checking)
         continue;
     if (PlayerMove(ref player, field, size, step.Value) == null)
         continue;
-
     step_count++;
     checking = checking_fields(field_normal, field, size);
-
-    
 }
 
 Console.WriteLine($"STEP: {step_count}");
@@ -46,6 +41,7 @@ Console.Write("You won!");
 
 ///LOGIC
 int random(int begin, int end) => new Random().Next(begin, end);
+
 
 int[,] normal_field(int y, int x)
 {
@@ -108,6 +104,7 @@ void print_field(int[,] field, int y, int x)
     }
 }
 
+
 int[,] MoveUp(ref Point coord, int[, ] arr)
 {
     if(coord.y > 0)
@@ -119,6 +116,7 @@ int[,] MoveUp(ref Point coord, int[, ] arr)
     }
     return null;
 }
+
 
 int[,] MoveDown(ref Point coord, int[,] arr, int y)
 {
@@ -132,6 +130,7 @@ int[,] MoveDown(ref Point coord, int[,] arr, int y)
     return null;
 }
 
+
 int[,] MoveLeft(ref Point coord, int[,] arr)
 {
     if (coord.x > 0)
@@ -143,6 +142,7 @@ int[,] MoveLeft(ref Point coord, int[,] arr)
     }
     return null;
 }
+
 
 int[,] MoveRight(ref Point coord, int[,] arr, int x)
 {
@@ -174,6 +174,7 @@ int[,] PlayerMove(ref Point player_coord, int[,] arr, Point field_size, Directio
     }
 }
 
+
 Tuple<int[,], Point>create_correct_field(ref Point coord)
 {
     Direction[] arr = { Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN };
@@ -190,6 +191,7 @@ Tuple<int[,], Point>create_correct_field(ref Point coord)
     return Tuple.Create(field, player_pos);
 
 }
+
 
 bool checking_fields(int[,] norm, int[,] unnorm, Point coords)
 {
@@ -209,6 +211,7 @@ enum Direction : int
     UP = 119,
     DOWN = 115
 };
+
 
 struct Point
 {
