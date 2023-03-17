@@ -27,7 +27,7 @@ while(!checking)
         ConsoleKey.LeftArrow => Direction.LEFT,
         _ => null
     };
-
+    Console.Clear();
     if (!step.HasValue)
         continue;
     if (PlayerMove(ref player, field, size, step.Value) == null)
@@ -36,7 +36,7 @@ while(!checking)
     step_count++;
     checking = checking_fields(field_normal, field, size);
 
-    Console.Clear();
+    
 }
 
 Console.WriteLine($"STEP: {step_count}");
