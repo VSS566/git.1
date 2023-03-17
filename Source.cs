@@ -12,8 +12,10 @@ int[,] field = pack.Item1;
 Point player = pack.Item2;
 bool checking = false;
 int step_count = 0;
+
 Console.Clear();
-while(!checking)
+
+while (!checking)
 {
     Console.WriteLine($"STEP: {step_count}");
     print_field(field, size.y, size.x);
@@ -25,11 +27,14 @@ while(!checking)
         ConsoleKey.LeftArrow => Direction.LEFT,
         _ => null
     };
+
     Console.Clear();
+
     if (!step.HasValue)
         continue;
     if (PlayerMove(ref player, field, size, step.Value) == null)
         continue;
+
     step_count++;
     checking = checking_fields(field_normal, field, size);
 }
@@ -69,9 +74,8 @@ Tuple<int[,], Point> create_field(in Point coord)
     int[] arr_temp = new int[n];
     for (int i = 0; i < n; i++)
         arr_temp[i] = i;
-    int num;
-    
-    for (int i = 0; i < random(5, n * 2); i++)
+
+    for (int i = 0; i < random(n, n * n); i++)
     {
         int index1 = random(0, n - 1);
         int index2 = random(0, n - 1);
@@ -105,9 +109,9 @@ void print_field(int[,] field, int y, int x)
 }
 
 
-int[,] MoveUp(ref Point coord, int[, ] arr)
+int[,] MoveUp(ref Point coord, int[,] arr)
 {
-    if(coord.y > 0)
+    if (coord.y > 0)
     {
         arr[coord.y, coord.x] = arr[coord.y - 1, coord.x];
         coord.y--;
@@ -175,9 +179,10 @@ int[,] PlayerMove(ref Point player_coord, int[,] arr, Point field_size, Directio
 }
 
 
-Tuple<int[,], Point>create_correct_field(ref Point coord)
+Tuple<int[,], Point> create_correct_field(ref Point coord)
 {
     Direction[] arr = { Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN };
+    int n = coord.x * coord.y;
     int[,] field = new int[coord.y, coord.x];
     Point player_pos = new Point(coord.y - 1, coord.x - 1);
     for (int i = 0; i < coord.y; i++)
@@ -185,8 +190,9 @@ Tuple<int[,], Point>create_correct_field(ref Point coord)
             field[i, j] = coord.y * i + j + 1;
     field[player_pos.y, player_pos.x] = 0;
 
-    for (int count = 0; count < random(50, 100); count++)
-        PlayerMove(ref player_pos, field, coord, arr[random(0, 4)]);
+    for (int count = 0; count < random(n * n, n * n * n); count++)
+        if (PlayerMove(ref player_pos, field, coord, arr[random(0, 4)]) == null)
+            count--;
 
     return Tuple.Create(field, player_pos);
 
