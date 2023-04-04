@@ -1,258 +1,223 @@
 #include <iostream>
+#include <tuple>
+#include <vector>
 #include <random>
-#include <conio.h>
-#include <cstdlib>
-#include <iomanip>
+#include <map>
+#include <unordered_map>
+
+#include <SDL.h>
 
 using namespace std;
 
-enum Direction : int
+int random(int begin, int end)
 {
-    LEFT = 97, RIGHT = 100, UP = 119, DOWN = 115
-};
+    random_device rnd;
+    uniform_int_distribution<> dist(begin, end);
+    return dist(rnd);
+}
 
 
-struct Point
+struct vec2d
 {
     int x;
     int y;
 };
 
-
-int random(int x, int y)
+class Entity
 {
-    random_device rng;
-    uniform_int_distribution<int> distribution(x, y);
-    return distribution(rng);
-}
-
-
-void qwerty(int x, int y)
-{
-    int** arr = new int* [x];
-    int temp = 1;
-    for (int i = 0; i < x; i++)
+public:
+    Entity(vec2d pos, uint16_t hp, uint8_t speed, vec2d size) : position_(pos), hp_(hp), speed_(speed), size_{ size } {};
+    void Render(SDL_Renderer* renderer)
     {
-        arr[i] = new int[y];
-        for (int j = 0; j < y; j++)
-        {
-            if (temp == x * y) break;
-            arr[i][j] = temp;
-            cout << arr[i][j] << ' ';
-            temp++;
-        }
-    }
-}
-
-
-int** normal_field(int x, int y)
-{
-    int** arr = new int* [x];
-    int temp = 1;
-    for (int i = 0; i < x; i++)
-    {
-        arr[i] = new int[y];
-        for (int j = 0; j < y; j++)
-        {
-            if (temp == x * y) break;
-            arr[i][j] = temp;
-            temp++;
-        }
-    }
-    arr[x - 1][y - 1] = 0;
-    return arr;
-}
-
-
-std::pair<int**, Point> create_field(Point &coord)
-{
-    Point player_pos;
-    int n = coord.x * coord.y;
-    int** arr = new int* [coord.x];
-    int* arr_temp = new int[n];
-    for (int i = 0; i < n; i++)
-    {
-        arr_temp[i] = i;
-    }
-    int num;
-    for (int i = 0; i < random(5, n*2); i++) {
-        int index1 = random(0, n-1);
-        int index2 = random(0, n-1);
-        int temp = arr_temp[index1];
-        arr_temp[index1] = arr_temp[index2];
-        arr_temp[index2] = temp;
-    }
-    for (int i = 0; i < coord.x; i++)
-    {
-        arr[i] = new int[coord.y];
-        for (int j = 0; j < coord.y; j++)
-        {
-            arr[i][j] = arr_temp[coord.y*i+j];
-            if (arr[i][j] == 0)
-                player_pos = { i, j };
-        }
-    }
-
-    delete[] arr_temp;
-
-    return { arr, player_pos };
-}
-
-
-void print_field(int** arr, int x, int y)
-{
-    for (int i = 0; i < x; i++)
-    {
-        for (int j = 0; j < y; j++)
-        {
-            cout << arr[i][j] << ' ';
-        }
-        cout << endl;
-    }
-}
-
-
-int** MoveUp(Point &coord, int** arr)
-{
-    if (coord.x > 0)
-    {
-        arr[coord.x][coord.y] = arr[coord.x - 1][coord.y];
-        coord.x--;
-        arr[coord.x][coord.y] = 0;
-        return arr;
-    }
-    return nullptr;
-};
-
-
-int** MoveDown(Point &coord, int** arr, int x)
-{
-    if (coord.x < x-1)
-    {
-        arr[coord.x][coord.y] = arr[coord.x + 1][coord.y];
-        coord.x++;
-        arr[coord.x][coord.y] = 0;
-        return arr;
-    }
-    return nullptr;
-};
-
-
-int** MoveLeft(Point &coord, int** arr)
-{
-    if (coord.y > 0)
-    {
-        arr[coord.x][coord.y] = arr[coord.x][coord.y - 1];
-        coord.y--;
-        arr[coord.x][coord.y] = 0;
-        return arr;
-    }
-    return nullptr;
-};
-
-
-int** MoveRight(Point &coord, int** arr, int y)
-{
-    if (coord.y < y-1)
-    {
-        arr[coord.x][coord.y] = arr[coord.x][coord.y + 1];
-        coord.y++;
-        arr[coord.x][coord.y] = 0;
-        return arr;
-    }
-    return nullptr;
-};
-
-
-int** PlayerMove(Point &player_coord, int** arr, Point field_size, Direction s)
-{
-    switch (s) {
-    case LEFT:
-        return MoveLeft(player_coord, arr);
-    case RIGHT:
-        return MoveRight(player_coord, arr, field_size.y);
-    case UP:
-        return MoveUp(player_coord, arr);
-    case DOWN:
-        return MoveDown(player_coord, arr, field_size.x);
-    default:
-        return nullptr;
-    }
-}
-
-
-std::pair<int**, Point> create_correct_field(const Point& coord)
-{
-    Direction arr[4] = { LEFT, RIGHT, UP, DOWN };
-    int** field = new int* [coord.x];
-    Point player_pos = { coord.x - 1, coord.y - 1 };
-    for (int i = 0; i < coord.x; i++)
-    {
-        field[i] = new int[coord.y];
-        for (int j = 0; j < coord.y; j++)
-        {
-            field[i][j] = coord.y * i + j + 1;
-        }
-    }
-    field[player_pos.x][player_pos.y] = 0;
-
-    for (size_t count = 0; count < random(50, 100); count++)
-    {
-        PlayerMove(player_pos, field, coord, arr[random(0, 4)]);
-    }
-
-    return { field, player_pos };
-}
-
-
-bool checking_fields(int** norm, int** unnorm, Point coords)
-{
-    int size = coords.x * coords.y, count = 0;
-    for (int i = 0; i < coords.x; i++)
-        for (int j = 0; j < coords.y; j++)
-            if (unnorm[i][j] == norm[i][j])
-                count++;
-    return count == size ? true : false;
-}
-
-
-int** generate_test_field() {
-    int* a = new int[9]{
-        1, 2, 3,
-        4, 5, 6,
-        7, 0, 8
+        SDL_Rect view = { position_.x, position_.y, size_.x, size_.y };
+        SDL_RenderFillRect(renderer, &view);
     };
-    return new int* [3]{ a, a + 3, a + 6 };
-}
+    virtual std::pair<int, int> GetPos() { return std::make_pair(position_.x, position_.y); }
 
+protected:
+    vec2d position_;
+    uint16_t hp_;
+    uint8_t speed_;
+    vec2d size_;
+};
 
-int main()
+class Player : public Entity
 {
-    Point size;
-    
-    setlocale(LC_ALL, "rus");
-    cout << "Èãðà ÏßÒÍÀØÊÈ\n"; cout << "ENTER FIELD SIZE\n";
-    cin >> size.x >> size.y;
-    int** field_normal = normal_field(size.x, size.y);
-    // Get the field and player position pack
-    auto pack = create_correct_field(size);
-    int** field = pack.first;
-    Point player = pack.second;
-    bool check = false;
-    int step_count = 0;
-    while (!check)
+public:
+    using Entity::Entity;
+    void Movement(const Uint8* state)
     {
-        cout << "STEP:\t" << step_count << endl;
-        print_field(field, size.x, size.y);
-        Direction step = static_cast<Direction>(_getch());
-        if (PlayerMove(player, field, size, step)) 
-        {
-            step_count++;
-            check = checking_fields(field_normal, field, size);
-        }
-        system("cls");
+        if (state[SDL_SCANCODE_UP] and !state[SDL_SCANCODE_DOWN])
+            position_.y -= speed_;
+        if (!state[SDL_SCANCODE_UP] and state[SDL_SCANCODE_DOWN])
+            position_.y += speed_;
+        if (state[SDL_SCANCODE_RIGHT] and !state[SDL_SCANCODE_LEFT])
+            position_.x += speed_;
+        if (!state[SDL_SCANCODE_RIGHT] and state[SDL_SCANCODE_LEFT])
+            position_.x -= speed_;
     }
-    cout << "STEP:\t" << step_count << endl;
-    print_field(field, size.x, size.y);
-    cout << "You won!";
+    void lvlup() {}
+private:
+};
+
+
+class Turrel : public Entity
+{
+public:
+    using Entity::Entity;
+    void Movement(const Uint8* state) {}
+    void lvlup() {}
+private:
+};
+
+
+class Enemy : public Entity
+{
+public:
+    using Entity::Entity;
+    void Movement()
+    {
+        position_.y += speed_;
+    }
+    void lvlup() {};
+private:
+};
+
+class Bullet : public Entity
+{
+public:
+    using Entity::Entity;
+    void Movement()
+    {
+        position_.y -= speed_;
+    }
+
+private:
+};
+
+
+
+int main(int argc, char* argv[])
+{
+    SDL_Init(SDL_INIT_EVERYTHING);
+    int WIDTH = 1200, HEIGHT = 800;
+
+
+    SDL_Window* window = SDL_CreateWindow("SDL GAME", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_RESIZABLE);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    SDL_Event ev;
+
+    const uint8_t FPS = 60;
+    const uint8_t PLAYER_SIZE = 15;
+    const uint8_t TURREL_SIZE = 10;
+    const uint8_t ENEMY_RAND_SIZE = random(5, 20);
+    const Uint8* state = SDL_GetKeyboardState(NULL);
+    vec2d mouse_coord;
+
+
+    vector<Turrel> turrels = {};
+    vector<Enemy> enemies = {};
+    vector<Bullet> bullets = {};
+
+    Player player({ WIDTH / 2, HEIGHT - 50 }, 100, 1, { PLAYER_SIZE, PLAYER_SIZE });
+    Enemy enemy_temp({ WIDTH / 2, 50 }, 100, 1, {PLAYER_SIZE, PLAYER_SIZE});
+    Bullet bullet({ player.GetPos().first, player.GetPos().second }, 1, 5, {4, 9});
+
+    enemies.push_back(enemy_temp);
+    bullets.push_back(bullet);
+
+
+
+    bool isRunning = true;
+    while (isRunning)
+    {
+        #pragma region EVENTS
+        bool created_bullet = false;
+        while (SDL_PollEvent(&ev))
+        {
+            switch (ev.type) {
+            case SDL_QUIT:
+                isRunning = false;
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (ev.button.button == SDL_BUTTON_LEFT)
+                {
+                    //turrel_count++;
+                    mouse_coord.x = ev.button.x;
+                    mouse_coord.y = ev.button.y;
+                    Turrel tur(mouse_coord, 25, 0, {TURREL_SIZE, TURREL_SIZE });
+                    turrels.push_back(tur);
+                }
+            case SDL_KEYDOWN:
+                switch (ev.key.keysym.scancode)
+                {
+                case SDL_SCANCODE_ESCAPE:
+                    isRunning = false;
+                    break;
+                case SDL_SCANCODE_D:
+                    created_bullet = true;
+                    break;
+                }
+            }
+        }
+
+        
+
+        player.Movement(state);
+
+        
+
+        #pragma endregion
+
+
+        #pragma region DRAWING
+
+        SDL_SetRenderDrawColor(renderer, 127, 127, 127, 255);
+        SDL_RenderClear(renderer);
+
+
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+        player.Render(renderer);
+
+        
+        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+        for (Turrel turrel : turrels)
+            turrel.Render(renderer);
+
+
+        SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255);
+        for (Enemy enemy : enemies)
+        {
+            enemy.Movement();
+            enemy.Render(renderer);
+        }
+        
+        
+        if (created_bullet)
+        {
+            Bullet bullet({ player.GetPos().first, player.GetPos().second }, 1, 5, {4, 9});
+            bullets.push_back(bullet);
+        }
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        for(Bullet bullet : bullets)
+        {
+            bullet.Movement();
+            bullet.Render(renderer);
+        }
+        
+
+
+
+        SDL_RenderPresent(renderer);
+        #pragma endregion
+
+        SDL_Delay(1000 / FPS);
+    }
+
+
+
+    SDL_Quit();
+
+    return 0;
 }
